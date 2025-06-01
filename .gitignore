@@ -1,0 +1,11 @@
+# IntelliJ IDEA 项目文件
+.idea/
+
+# 编译输出目录（如 Maven、Gradle）
+/target
+/out
+
+# 临时文件
+/logs
+*.log
+*.tmp
