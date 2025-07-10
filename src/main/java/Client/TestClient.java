@@ -12,7 +12,7 @@ import common.service.UserService;
  * @create 2025/5/25 21:03
  */
 public class TestClient {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         ClientProxy clientProxy = new ClientProxy("127.0.0.1", 8888, 1);
         UserService proxy = clientProxy.getProxy(UserService.class);
 
