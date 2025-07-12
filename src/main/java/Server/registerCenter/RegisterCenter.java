@@ -8,5 +8,5 @@ import java.net.InetSocketAddress;
  * @create 2025/6/1 17:08
  */
 public interface RegisterCenter {
-    void register(String serviceName, InetSocketAddress address);
+    void register(String serviceName, InetSocketAddress address, boolean canRetry);
 }

@@ -26,6 +26,7 @@ public class ZkServiceCenter implements ServiceCenter {
     private ServiceCache cache;
     private LoadBalance loadBalance;
     private static final String ROOT_PATH = "xRPC";
+    private static final String RETRY_PATH = "canRetry";
     private static final String ZK_ADDRESS = "127.0.0.1:2181";
 
     public ZkServiceCenter() throws InterruptedException {
@@ -63,4 +64,25 @@ public class ZkServiceCenter implements ServiceCenter {
         }
         return null;
     }
+
+    @Override
+    public boolean checkRetry(String serviceName) {
+        boolean canRetry = false;
+        try {
+            List<String> serverList = this.client.getChildren().forPath("/" + RETRY_PATH);
+
+            for (String s : serverList) {
+                if (serviceName.equals(s)) {
+                    canRetry = true;
+                    log.info("ZkServiceCenter: checkRetry is true, serviceName={}", serviceName);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return canRetry;
+    }
+
 }

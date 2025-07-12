@@ -28,13 +28,13 @@ public class ServiceProvider {
         this.registerCenter = new ZkRegisterCenter();
     }
 
-    public void register(Object service) {
+    public void register(Object service, boolean canRetry) {
         Class<?>[] interfaces = service.getClass().getInterfaces();
         InetSocketAddress address = new InetSocketAddress(ip, port);
 
         for (Class<?> clazz : interfaces) {
             interfaceProvider.put(clazz.getName(), service);
-            registerCenter.register(clazz.getName(), address);
+            registerCenter.register(clazz.getName(), address, canRetry);
             log.info("register service:{}, address:{}", clazz.getName(), address);
         }
     }

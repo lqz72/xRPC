@@ -19,6 +19,7 @@ public class ZkRegisterCenter implements RegisterCenter {
 
     private CuratorFramework client;
     private static final String ROOT_PATH = "xRPC";
+    private static final String RETRY_PATH = "canRetry";
     private static final String ZK_ADDRESS = "127.0.0.1:2181";
 
     public ZkRegisterCenter() {
@@ -31,15 +32,22 @@ public class ZkRegisterCenter implements RegisterCenter {
     }
 
     @Override
-    public void register(String serviceName, InetSocketAddress address) {
+    public void register(String serviceName, InetSocketAddress address, boolean canRetry) {
         try {
             // serviceName创建为永久节点 服务上下线只影响子节点
             if(client.checkExists().forPath("/" + serviceName) == null) {
                 client.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath("/" + serviceName);
             }
+
             // 子节点创建为临时节点
             String path = "/" + serviceName + "/" + InetAddressUtil.InetAddress2String(address);
             client.create().withMode(CreateMode.EPHEMERAL).forPath(path);
+
+            // 如果服务是幂等性的 添加到重试白名单节点下
+            if (canRetry) {
+                String retryPath = "/" + RETRY_PATH + "/" + serviceName;
+                client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(retryPath);
+            }
         } catch (Exception e) {
             log.error("服务注册失败", e);
         }
