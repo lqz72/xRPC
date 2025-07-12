@@ -2,7 +2,10 @@ package Client.serviceCenter;
 
 import Client.cache.ServiceCache;
 import Client.serviceCenter.ZKWatcher.WatchZK;
+import Client.serviceCenter.balance.LoadBalance;
+import Client.serviceCenter.balance.impl.ConsistencyHashBalance;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
@@ -21,6 +24,7 @@ public class ZkServiceCenter implements ServiceCenter {
 
     private CuratorFramework client;
     private ServiceCache cache;
+    private LoadBalance loadBalance;
     private static final String ROOT_PATH = "xRPC";
     private static final String ZK_ADDRESS = "127.0.0.1:2181";
 
@@ -36,17 +40,23 @@ public class ZkServiceCenter implements ServiceCenter {
         this.cache = new ServiceCache();
         WatchZK watcher = new WatchZK(this.client, this.cache);
         watcher.watchToUpdate();
+
+        this.loadBalance = new ConsistencyHashBalance();
     }
 
     @Override
     public InetSocketAddress serviceDiscovery(String serviceName) {
         try {
             List<String> addressList = cache.getServiceAddress(serviceName);
-            if (addressList == null) {
+            if (CollectionUtils.isEmpty(addressList)) {
                 addressList = this.client.getChildren().forPath("/" + serviceName);
                 log.info("服务缓存命中，serviceName:{}", serviceName);
             }
-            String address = addressList.get(0);
+
+            String address = loadBalance.balance(addressList);
+            if (address == null) {
+                log.error("ZkServiceCenter: serviceDiscovery, 获取服务失败, serviceName={}", serviceName);
+            }
             return InetAddressUtil.String2InetAddress(address);
         } catch (Exception e) {
             log.error("获取服务失败", e);
