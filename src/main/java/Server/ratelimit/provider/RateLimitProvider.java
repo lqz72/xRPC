@@ -3,6 +3,7 @@ package Server.ratelimit.provider;
 import Server.ratelimit.RateLimit;
 import Server.ratelimit.impl.TokenBucketRateLimitImpl;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,9 +14,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RateLimitProvider {
 
-    private Map<String, RateLimit> rateLimitMap = new ConcurrentHashMap<>();
+    private Map<String, RateLimit> rateLimitMap = new HashMap<>();
 
-    public RateLimit getRateLimit(String interfaceName){
+    public synchronized RateLimit getRateLimit(String interfaceName){
         if(!rateLimitMap.containsKey(interfaceName)){
             // 令牌桶配置先写死
             RateLimit rateLimit= new TokenBucketRateLimitImpl(100,10);
