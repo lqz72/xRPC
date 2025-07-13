@@ -1,5 +1,8 @@
 package Server.provider;
 
+import Server.ratelimit.RateLimit;
+import Server.ratelimit.impl.TokenBucketRateLimitImpl;
+import Server.ratelimit.provider.RateLimitProvider;
 import Server.registerCenter.RegisterCenter;
 import Server.registerCenter.ZkRegisterCenter;
 import lombok.extern.slf4j.Slf4j;
@@ -20,12 +23,14 @@ public class ServiceProvider {
     private int port;
     private Map<String, Object> interfaceProvider;
     private RegisterCenter registerCenter;
+    private RateLimitProvider rateLimitProvider;
 
     public ServiceProvider(String ip, int port) {
         this.ip = ip;
         this.port = port;
         this.interfaceProvider = new HashMap<String, Object>();
         this.registerCenter = new ZkRegisterCenter();
+        this.rateLimitProvider = new RateLimitProvider();
     }
 
     public void register(Object service, boolean canRetry) {
@@ -42,4 +47,9 @@ public class ServiceProvider {
     public Object getService(String serviceName) {
         return interfaceProvider.get(serviceName);
     }
+
+    public RateLimit getRateLimit(String serviceName) {
+        return rateLimitProvider.getRateLimit(serviceName);
+    }
+
 }

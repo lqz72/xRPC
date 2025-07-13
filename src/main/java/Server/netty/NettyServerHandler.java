@@ -1,6 +1,7 @@
 package Server.netty;
 
 import Server.provider.ServiceProvider;
+import Server.ratelimit.RateLimit;
 import common.message.RpcRequest;
 import common.message.RpcResponse;
 import io.netty.channel.Channel;
@@ -10,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 /**
  * @author yongfu
@@ -37,6 +39,12 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> 
 
     public Object getResponse(RpcRequest request)  {
         String serviceName = request.getInterfaceName();
+
+        // 接口限流
+        RateLimit rateLimit = serviceProvider.getRateLimit(serviceName);
+        if (Objects.nonNull(rateLimit) && !rateLimit.getToken()) {
+            return RpcResponse.fail();
+        }
 
         Method method = null;
         try {
